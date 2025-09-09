@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  format-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install just
+        run: cargo install just --locked
+
+      - name: Run just fmt
+        run: just fmt
+
+      - name: Fail if formatting changed
+        run: |
+          if ! git diff --quiet; then
+            echo "::error::Formatting changes detected. Run 'just fmt' and commit.";
+            git --no-pager diff --stat
+            exit 1
+          fi
+
+  schema-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install just
+        run: cargo install just --locked
+
+      - name: Generate schemas
+        run: just schemas
+
+      - name: Warn on schema drift (non-fatal)
+        run: |
+          if ! git diff --quiet -- schemas/config_schemas.json; then
+            echo "::warning::Schema drift detected. Run 'just schemas' and commit updated files.";
+            git --no-pager diff --stat -- schemas/config_schemas.json
+          fi
