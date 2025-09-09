@@ -1,0 +1,1330 @@
+{
+  "ConfigProfile": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+      "AskForApproval": {
+        "description": "Determines the conditions under which the user is consulted to approve running the command proposed by Codex.",
+        "oneOf": [
+          {
+            "description": "Under this policy, only \"known safe\" commands—as determined by `is_safe_command()`—that **only read files** are auto‑approved. Everything else will ask the user to approve.",
+            "enum": [
+              "untrusted"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "*All* commands are auto‑approved, but they are expected to run inside a sandbox where network access is disabled and writes are confined to a specific set of paths. If the command fails, it will be escalated to the user to approve execution without a sandbox.",
+            "enum": [
+              "on-failure"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "The model decides when to ask the user for approval.",
+            "enum": [
+              "on-request"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Never ask the user to approve commands. Failures are immediately returned to the model, and never escalated to the user for approval.",
+            "enum": [
+              "never"
+            ],
+            "type": "string"
+          }
+        ]
+      },
+      "ReasoningEffort": {
+        "description": "See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning",
+        "enum": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ],
+        "type": "string"
+      },
+      "ReasoningSummary": {
+        "description": "A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process. See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#reasoning-summaries",
+        "oneOf": [
+          {
+            "enum": [
+              "auto",
+              "concise",
+              "detailed"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Option to disable reasoning summaries.",
+            "enum": [
+              "none"
+            ],
+            "type": "string"
+          }
+        ]
+      },
+      "Verbosity": {
+        "description": "Controls output length/detail on GPT-5 models via the Responses API. Serialized with lowercase values to match the OpenAI API.",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "type": "string"
+      }
+    },
+    "description": "Collection of common configuration options that a user can define as a unit in `config.toml`.",
+    "properties": {
+      "approval_policy": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/AskForApproval"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "chatgpt_base_url": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "experimental_instructions_file": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model_provider": {
+        "description": "The key in the `model_providers` map identifying the [`ModelProviderInfo`] to use.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model_reasoning_effort": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/ReasoningEffort"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "model_reasoning_summary": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/ReasoningSummary"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "model_verbosity": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Verbosity"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "title": "ConfigProfile",
+    "type": "object"
+  },
+  "ConfigToml": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+      "AskForApproval": {
+        "description": "Determines the conditions under which the user is consulted to approve running the command proposed by Codex.",
+        "oneOf": [
+          {
+            "description": "Under this policy, only \"known safe\" commands—as determined by `is_safe_command()`—that **only read files** are auto‑approved. Everything else will ask the user to approve.",
+            "enum": [
+              "untrusted"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "*All* commands are auto‑approved, but they are expected to run inside a sandbox where network access is disabled and writes are confined to a specific set of paths. If the command fails, it will be escalated to the user to approve execution without a sandbox.",
+            "enum": [
+              "on-failure"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "The model decides when to ask the user for approval.",
+            "enum": [
+              "on-request"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Never ask the user to approve commands. Failures are immediately returned to the model, and never escalated to the user for approval.",
+            "enum": [
+              "never"
+            ],
+            "type": "string"
+          }
+        ]
+      },
+      "AuthMode": {
+        "enum": [
+          "apikey",
+          "chatgpt"
+        ],
+        "type": "string"
+      },
+      "ConfigProfile": {
+        "description": "Collection of common configuration options that a user can define as a unit in `config.toml`.",
+        "properties": {
+          "approval_policy": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/AskForApproval"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "chatgpt_base_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "experimental_instructions_file": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model_provider": {
+            "description": "The key in the `model_providers` map identifying the [`ModelProviderInfo`] to use.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model_reasoning_effort": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/ReasoningEffort"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model_reasoning_summary": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/ReasoningSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model_verbosity": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Verbosity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "History": {
+        "description": "Settings that govern if and what will be written to `~/.codex/history.jsonl`.",
+        "properties": {
+          "max_bytes": {
+            "description": "If set, the maximum size of the history file in bytes. TODO(mbolin): Not currently honored.",
+            "format": "uint",
+            "minimum": 0.0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "persistence": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/HistoryPersistence"
+              }
+            ],
+            "description": "If true, history entries will not be written to disk."
+          }
+        },
+        "required": [
+          "persistence"
+        ],
+        "type": "object"
+      },
+      "HistoryPersistence": {
+        "oneOf": [
+          {
+            "description": "Save all history entries to disk.",
+            "enum": [
+              "save-all"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Do not write history to disk.",
+            "enum": [
+              "none"
+            ],
+            "type": "string"
+          }
+        ]
+      },
+      "McpServerConfig": {
+        "properties": {
+          "args": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "command": {
+            "type": "string"
+          },
+          "env": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": null,
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "startup_timeout_ms": {
+            "default": null,
+            "description": "Startup timeout in milliseconds for initializing MCP server & initially listing tools.",
+            "format": "uint64",
+            "minimum": 0.0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "command"
+        ],
+        "type": "object"
+      },
+      "ModelProviderInfo": {
+        "description": "Serializable representation of a provider definition.",
+        "properties": {
+          "base_url": {
+            "description": "Base URL for the provider's OpenAI-compatible API.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "env_http_headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional HTTP headers to include in requests to this provider where the (key, value) pairs are the header name and _environment variable_ whose value should be used. If the environment variable is not set, or the value is empty, the header will not be included in the request.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "env_key": {
+            "description": "Environment variable that stores the user's API key for this provider.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "env_key_instructions": {
+            "description": "Optional instructions to help the user get a valid value for the variable and set it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "http_headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Additional HTTP headers to include in requests to this provider where the (key, value) pairs are the header name and value.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "Friendly display name.",
+            "type": "string"
+          },
+          "query_params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional query parameters to append to the base URL.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "request_max_retries": {
+            "description": "Maximum number of times to retry a failed HTTP request to this provider.",
+            "format": "uint64",
+            "minimum": 0.0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "requires_openai_auth": {
+            "default": false,
+            "description": "Whether this provider requires some form of standard authentication (API key, ChatGPT token).",
+            "type": "boolean"
+          },
+          "stream_idle_timeout_ms": {
+            "description": "Idle timeout (in milliseconds) to wait for activity on a streaming response before treating the connection as lost.",
+            "format": "uint64",
+            "minimum": 0.0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "stream_max_retries": {
+            "description": "Number of times to retry reconnecting a dropped streaming response before failing.",
+            "format": "uint64",
+            "minimum": 0.0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "wire_api": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/WireApi"
+              }
+            ],
+            "default": "chat",
+            "description": "Which wire protocol this provider expects."
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "ProjectConfig": {
+        "properties": {
+          "trust_level": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ReasoningEffort": {
+        "description": "See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning",
+        "enum": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ],
+        "type": "string"
+      },
+      "ReasoningSummary": {
+        "description": "A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process. See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#reasoning-summaries",
+        "oneOf": [
+          {
+            "enum": [
+              "auto",
+              "concise",
+              "detailed"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Option to disable reasoning summaries.",
+            "enum": [
+              "none"
+            ],
+            "type": "string"
+          }
+        ]
+      },
+      "ReasoningSummaryFormat": {
+        "enum": [
+          "none",
+          "experimental"
+        ],
+        "type": "string"
+      },
+      "SandboxMode": {
+        "enum": [
+          "read-only",
+          "workspace-write",
+          "danger-full-access"
+        ],
+        "type": "string"
+      },
+      "SandboxWorkspaceWrite": {
+        "properties": {
+          "exclude_slash_tmp": {
+            "default": false,
+            "type": "boolean"
+          },
+          "exclude_tmpdir_env_var": {
+            "default": false,
+            "type": "boolean"
+          },
+          "network_access": {
+            "default": false,
+            "type": "boolean"
+          },
+          "writable_roots": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ShellEnvironmentPolicyInherit": {
+        "oneOf": [
+          {
+            "description": "\"Core\" environment variables for the platform. On UNIX, this would include HOME, LOGNAME, PATH, SHELL, and USER, among others.",
+            "enum": [
+              "core"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Inherits the full environment from the parent process.",
+            "enum": [
+              "all"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Do not inherit any environment variables from the parent process.",
+            "enum": [
+              "none"
+            ],
+            "type": "string"
+          }
+        ]
+      },
+      "ShellEnvironmentPolicyToml": {
+        "description": "Policy for building the `env` when spawning a process via either the `shell` or `local_shell` tool.",
+        "properties": {
+          "exclude": {
+            "description": "List of regular expressions.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "experimental_use_profile": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "ignore_default_excludes": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "include_only": {
+            "description": "List of regular expressions.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "inherit": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/ShellEnvironmentPolicyInherit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "set": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ToolsToml": {
+        "properties": {
+          "view_image": {
+            "default": null,
+            "description": "Enable the `view_image` tool that lets the agent attach local images.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "web_search": {
+            "default": null,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "Tui": {
+        "description": "Collection of settings that are specific to the TUI.",
+        "type": "object"
+      },
+      "UriBasedFileOpener": {
+        "oneOf": [
+          {
+            "enum": [
+              "vscode",
+              "vscode-insiders",
+              "windsurf",
+              "cursor"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Option to disable the URI-based file opener.",
+            "enum": [
+              "none"
+            ],
+            "type": "string"
+          }
+        ]
+      },
+      "Verbosity": {
+        "description": "Controls output length/detail on GPT-5 models via the Responses API. Serialized with lowercase values to match the OpenAI API.",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "type": "string"
+      },
+      "WireApi": {
+        "description": "Wire protocol that the provider speaks. Most third-party services only implement the classic OpenAI Chat Completions JSON schema, whereas OpenAI itself (and a handful of others) additionally expose the more modern *Responses* API. The two protocols use different request/response shapes and *cannot* be auto-detected at runtime, therefore each provider entry must declare which one it expects.",
+        "oneOf": [
+          {
+            "description": "The Responses API exposed by OpenAI at `/v1/responses`.",
+            "enum": [
+              "responses"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Regular Chat Completions compatible with `/v1/chat/completions`.",
+            "enum": [
+              "chat"
+            ],
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "description": "Base config deserialized from ~/.codex/config.toml.",
+    "properties": {
+      "approval_policy": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/AskForApproval"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Default approval policy for executing commands."
+      },
+      "chatgpt_base_url": {
+        "description": "Base URL for requests to ChatGPT (as opposed to the OpenAI API).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "disable_paste_burst": {
+        "description": "When true, disables burst-paste detection for typed input entirely. All characters are inserted as they are received, and no buffering or placeholder replacement will occur for fast keypress bursts.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "experimental_instructions_file": {
+        "description": "Experimental path to a file whose contents replace the built-in BASE_INSTRUCTIONS.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "experimental_resume": {
+        "description": "Experimental rollout resume path (absolute path to .jsonl; undocumented).",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "experimental_use_exec_command_tool": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "file_opener": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/UriBasedFileOpener"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Optional URI-based file opener. If set, citations to files in the model output will be hyperlinked using the specified URI scheme."
+      },
+      "hide_agent_reasoning": {
+        "description": "When set to `true`, `AgentReasoning` events will be hidden from the UI/output. Defaults to `false`.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "history": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/History"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Settings that govern if and what will be written to `~/.codex/history.jsonl`."
+      },
+      "instructions": {
+        "description": "System instructions.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "mcp_servers": {
+        "additionalProperties": {
+          "$ref": "#/definitions/McpServerConfig"
+        },
+        "description": "Definition for MCP servers that Codex can reach out to for tool calls.",
+        "type": "object"
+      },
+      "model": {
+        "description": "Optional override of model selection.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model_context_window": {
+        "description": "Size of the context window for the model, in tokens.",
+        "format": "uint64",
+        "minimum": 0.0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "model_max_output_tokens": {
+        "description": "Maximum number of output tokens.",
+        "format": "uint64",
+        "minimum": 0.0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "model_provider": {
+        "description": "Provider to use from the model_providers map.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "model_providers": {
+        "additionalProperties": {
+          "$ref": "#/definitions/ModelProviderInfo"
+        },
+        "default": {},
+        "description": "User-defined provider entries that extend/override the built-in list.",
+        "type": "object"
+      },
+      "model_reasoning_effort": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/ReasoningEffort"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "model_reasoning_summary": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/ReasoningSummary"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "model_reasoning_summary_format": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/ReasoningSummaryFormat"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Override to force reasoning summary format for the configured model."
+      },
+      "model_supports_reasoning_summaries": {
+        "description": "Override to force-enable reasoning summaries for the configured model.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "model_verbosity": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Verbosity"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Optional verbosity control for GPT-5 models (Responses API `text.verbosity`)."
+      },
+      "notify": {
+        "default": null,
+        "description": "Optional external command to spawn for end-user notifications.",
+        "items": {
+          "type": "string"
+        },
+        "type": [
+          "array",
+          "null"
+        ]
+      },
+      "preferred_auth_method": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/AuthMode"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "If set to `true`, the API key will be signed with the `originator` header."
+      },
+      "profile": {
+        "description": "Profile to use from the `profiles` map.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "profiles": {
+        "additionalProperties": {
+          "$ref": "#/definitions/ConfigProfile"
+        },
+        "description": "Named profiles to facilitate switching between different configurations.",
+        "type": "object"
+      },
+      "project_doc_max_bytes": {
+        "description": "Maximum number of bytes to include from an AGENTS.md project doc file.",
+        "format": "uint",
+        "minimum": 0.0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "projects": {
+        "additionalProperties": {
+          "$ref": "#/definitions/ProjectConfig"
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "responses_originator_header_internal_override": {
+        "description": "The value for the `originator` header included with Responses API requests.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "sandbox_mode": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/SandboxMode"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Sandbox mode to use."
+      },
+      "sandbox_workspace_write": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/SandboxWorkspaceWrite"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Sandbox configuration to apply if `sandbox` is `WorkspaceWrite`."
+      },
+      "shell_environment_policy": {
+        "$ref": "#/definitions/ShellEnvironmentPolicyToml"
+      },
+      "show_raw_agent_reasoning": {
+        "description": "When set to `true`, `AgentReasoningRawContentEvent` events will be shown in the UI/output. Defaults to `false`.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "tools": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/ToolsToml"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Nested tools section for feature toggles"
+      },
+      "tui": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Tui"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Collection of settings that are specific to the TUI."
+      }
+    },
+    "title": "ConfigToml",
+    "type": "object"
+  },
+  "History": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+      "HistoryPersistence": {
+        "oneOf": [
+          {
+            "description": "Save all history entries to disk.",
+            "enum": [
+              "save-all"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Do not write history to disk.",
+            "enum": [
+              "none"
+            ],
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "description": "Settings that govern if and what will be written to `~/.codex/history.jsonl`.",
+    "properties": {
+      "max_bytes": {
+        "description": "If set, the maximum size of the history file in bytes. TODO(mbolin): Not currently honored.",
+        "format": "uint",
+        "minimum": 0.0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "persistence": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/HistoryPersistence"
+          }
+        ],
+        "description": "If true, history entries will not be written to disk."
+      }
+    },
+    "required": [
+      "persistence"
+    ],
+    "title": "History",
+    "type": "object"
+  },
+  "HistoryPersistence": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "oneOf": [
+      {
+        "description": "Save all history entries to disk.",
+        "enum": [
+          "save-all"
+        ],
+        "type": "string"
+      },
+      {
+        "description": "Do not write history to disk.",
+        "enum": [
+          "none"
+        ],
+        "type": "string"
+      }
+    ],
+    "title": "HistoryPersistence"
+  },
+  "McpServerConfig": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+      "args": {
+        "default": [],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "command": {
+        "type": "string"
+      },
+      "env": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": null,
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "startup_timeout_ms": {
+        "default": null,
+        "description": "Startup timeout in milliseconds for initializing MCP server & initially listing tools.",
+        "format": "uint64",
+        "minimum": 0.0,
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "command"
+    ],
+    "title": "McpServerConfig",
+    "type": "object"
+  },
+  "ProjectConfig": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+      "trust_level": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "title": "ProjectConfig",
+    "type": "object"
+  },
+  "ReasoningEffort": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning",
+    "enum": [
+      "minimal",
+      "low",
+      "medium",
+      "high"
+    ],
+    "title": "ReasoningEffort",
+    "type": "string"
+  },
+  "ReasoningSummary": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "A summary of the reasoning performed by the model. This can be useful for debugging and understanding the model's reasoning process. See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#reasoning-summaries",
+    "oneOf": [
+      {
+        "enum": [
+          "auto",
+          "concise",
+          "detailed"
+        ],
+        "type": "string"
+      },
+      {
+        "description": "Option to disable reasoning summaries.",
+        "enum": [
+          "none"
+        ],
+        "type": "string"
+      }
+    ],
+    "title": "ReasoningSummary"
+  },
+  "ReasoningSummaryFormat": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "enum": [
+      "none",
+      "experimental"
+    ],
+    "title": "ReasoningSummaryFormat",
+    "type": "string"
+  },
+  "SandboxMode": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "enum": [
+      "read-only",
+      "workspace-write",
+      "danger-full-access"
+    ],
+    "title": "SandboxMode",
+    "type": "string"
+  },
+  "SandboxWorkspaceWrite": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+      "exclude_slash_tmp": {
+        "default": false,
+        "type": "boolean"
+      },
+      "exclude_tmpdir_env_var": {
+        "default": false,
+        "type": "boolean"
+      },
+      "network_access": {
+        "default": false,
+        "type": "boolean"
+      },
+      "writable_roots": {
+        "default": [],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "title": "SandboxWorkspaceWrite",
+    "type": "object"
+  },
+  "ShellEnvironmentPolicyToml": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+      "ShellEnvironmentPolicyInherit": {
+        "oneOf": [
+          {
+            "description": "\"Core\" environment variables for the platform. On UNIX, this would include HOME, LOGNAME, PATH, SHELL, and USER, among others.",
+            "enum": [
+              "core"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Inherits the full environment from the parent process.",
+            "enum": [
+              "all"
+            ],
+            "type": "string"
+          },
+          {
+            "description": "Do not inherit any environment variables from the parent process.",
+            "enum": [
+              "none"
+            ],
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "description": "Policy for building the `env` when spawning a process via either the `shell` or `local_shell` tool.",
+    "properties": {
+      "exclude": {
+        "description": "List of regular expressions.",
+        "items": {
+          "type": "string"
+        },
+        "type": [
+          "array",
+          "null"
+        ]
+      },
+      "experimental_use_profile": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "ignore_default_excludes": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "include_only": {
+        "description": "List of regular expressions.",
+        "items": {
+          "type": "string"
+        },
+        "type": [
+          "array",
+          "null"
+        ]
+      },
+      "inherit": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/ShellEnvironmentPolicyInherit"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "set": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      }
+    },
+    "title": "ShellEnvironmentPolicyToml",
+    "type": "object"
+  },
+  "ToolsToml": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+      "view_image": {
+        "default": null,
+        "description": "Enable the `view_image` tool that lets the agent attach local images.",
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "web_search": {
+        "default": null,
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "title": "ToolsToml",
+    "type": "object"
+  },
+  "Tui": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Collection of settings that are specific to the TUI.",
+    "title": "Tui",
+    "type": "object"
+  },
+  "UriBasedFileOpener": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "oneOf": [
+      {
+        "enum": [
+          "vscode",
+          "vscode-insiders",
+          "windsurf",
+          "cursor"
+        ],
+        "type": "string"
+      },
+      {
+        "description": "Option to disable the URI-based file opener.",
+        "enum": [
+          "none"
+        ],
+        "type": "string"
+      }
+    ],
+    "title": "UriBasedFileOpener"
+  },
+  "Verbosity": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Controls output length/detail on GPT-5 models via the Responses API. Serialized with lowercase values to match the OpenAI API.",
+    "enum": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "title": "Verbosity",
+    "type": "string"
+  }
+}

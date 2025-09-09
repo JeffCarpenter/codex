@@ -34,3 +34,8 @@ install:
 # Run the MCP server
 mcp-server-run *args:
     cargo run -p codex-mcp-server -- "$@"
+
+# Generate JSON Schemas for config types
+schemas:
+    mkdir -p schemas
+    cargo run -p codex-config-schema -- > schemas/config_schemas.json

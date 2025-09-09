@@ -9,22 +9,30 @@ use wildmatch::WildMatchPattern;
 
 use serde::Deserialize;
 
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
+
 #[derive(Deserialize, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct McpServerConfig {
     pub command: String,
 
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub args: Vec<String>,
 
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub env: Option<HashMap<String, String>>,
 
     /// Startup timeout in milliseconds for initializing MCP server & initially listing tools.
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub startup_timeout_ms: Option<u64>,
 }
 
 #[derive(Deserialize, Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub enum UriBasedFileOpener {
     #[serde(rename = "vscode")]
     VsCode,
@@ -57,6 +65,7 @@ impl UriBasedFileOpener {
 
 /// Settings that govern if and what will be written to `~/.codex/history.jsonl`.
 #[derive(Deserialize, Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct History {
     /// If true, history entries will not be written to disk.
     pub persistence: HistoryPersistence,
@@ -67,6 +76,7 @@ pub struct History {
 }
 
 #[derive(Deserialize, Debug, Copy, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum HistoryPersistence {
     /// Save all history entries to disk.
@@ -78,17 +88,23 @@ pub enum HistoryPersistence {
 
 /// Collection of settings that are specific to the TUI.
 #[derive(Deserialize, Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct Tui {}
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct SandboxWorkspaceWrite {
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub writable_roots: Vec<PathBuf>,
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub network_access: bool,
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub exclude_tmpdir_env_var: bool,
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub exclude_slash_tmp: bool,
 }
 
@@ -104,6 +120,7 @@ impl From<SandboxWorkspaceWrite> for codex_protocol::mcp_protocol::SandboxSettin
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum ShellEnvironmentPolicyInherit {
     /// "Core" environment variables for the platform. On UNIX, this would
@@ -121,6 +138,7 @@ pub enum ShellEnvironmentPolicyInherit {
 /// Policy for building the `env` when spawning a process via either the
 /// `shell` or `local_shell` tool.
 #[derive(Deserialize, Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct ShellEnvironmentPolicyToml {
     pub inherit: Option<ShellEnvironmentPolicyInherit>,
 
@@ -200,6 +218,7 @@ impl From<ShellEnvironmentPolicyToml> for ShellEnvironmentPolicy {
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq, Default, Hash)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum ReasoningSummaryFormat {
     #[default]

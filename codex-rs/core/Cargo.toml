@@ -56,6 +56,16 @@ tree-sitter-bash = "0.25.0"
 uuid = { version = "1", features = ["serde", "v4"] }
 wildmatch = "2.4.0"
 
+[features]
+default = []
+# Enable JSON Schema derivations for config types
+json-schema = ["dep:schemars", "codex-protocol/json-schema"]
+
+[dependencies.schemars]
+version = "0.8"
+optional = true
+features = ["preserve_order"]
+
 
 [target.'cfg(target_os = "linux")'.dependencies]
 landlock = "0.4.1"

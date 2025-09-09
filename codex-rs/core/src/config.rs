@@ -24,6 +24,9 @@ use codex_protocol::mcp_protocol::Tools;
 use codex_protocol::mcp_protocol::UserSavedConfig;
 use dirs::home_dir;
 use serde::Deserialize;
+
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 use std::collections::HashMap;
 use std::path::Path;
 use std::path::PathBuf;
@@ -387,6 +390,7 @@ fn apply_toml_override(root: &mut TomlValue, path: &str, value: TomlValue) {
 
 /// Base config deserialized from ~/.codex/config.toml.
 #[derive(Deserialize, Debug, Clone, Default)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct ConfigToml {
     /// Optional override of model selection.
     pub model: Option<String>,
@@ -404,6 +408,7 @@ pub struct ConfigToml {
     pub approval_policy: Option<AskForApproval>,
 
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub shell_environment_policy: ShellEnvironmentPolicyToml,
 
     /// Sandbox mode to use.
@@ -414,6 +419,7 @@ pub struct ConfigToml {
 
     /// Optional external command to spawn for end-user notifications.
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub notify: Option<Vec<String>>,
 
     /// System instructions.
@@ -421,10 +427,12 @@ pub struct ConfigToml {
 
     /// Definition for MCP servers that Codex can reach out to for tool calls.
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub mcp_servers: HashMap<String, McpServerConfig>,
 
     /// User-defined provider entries that extend/override the built-in list.
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub model_providers: HashMap<String, ModelProviderInfo>,
 
     /// Maximum number of bytes to include from an AGENTS.md project doc file.
@@ -435,10 +443,12 @@ pub struct ConfigToml {
 
     /// Named profiles to facilitate switching between different configurations.
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub profiles: HashMap<String, ConfigProfile>,
 
     /// Settings that govern if and what will be written to `~/.codex/history.jsonl`.
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub history: Option<History>,
 
     /// Optional URI-based file opener. If set, citations to files in the model
@@ -519,17 +529,21 @@ impl From<ConfigToml> for UserSavedConfig {
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct ProjectConfig {
     pub trust_level: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct ToolsToml {
     #[serde(default, alias = "web_search_request")]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub web_search: Option<bool>,
 
     /// Enable the `view_image` tool that lets the agent attach local images.
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub view_image: Option<bool>,
 }
 

@@ -1,4 +1,7 @@
 use serde::Deserialize;
+
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 use std::path::PathBuf;
 
 use crate::protocol::AskForApproval;
@@ -9,6 +12,7 @@ use codex_protocol::config_types::Verbosity;
 /// Collection of common configuration options that a user can define as a unit
 /// in `config.toml`.
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct ConfigProfile {
     pub model: Option<String>,
     /// The key in the `model_providers` map identifying the

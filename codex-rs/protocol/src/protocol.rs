@@ -27,6 +27,9 @@ use serde_with::serde_as;
 use strum_macros::Display;
 use ts_rs::TS;
 
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
+
 /// Open/close tags for special user-input blocks. Used across crates to avoid
 /// duplicated hardcoded strings.
 pub const USER_INSTRUCTIONS_OPEN_TAG: &str = "<user_instructions>";
@@ -169,6 +172,7 @@ pub enum Op {
 /// Determines the conditions under which the user is consulted to approve
 /// running the command proposed by Codex.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, Display, TS)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
 pub enum AskForApproval {

@@ -14,6 +14,8 @@ use std::env::VarError;
 use std::time::Duration;
 
 use crate::error::EnvVarError;
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 const DEFAULT_STREAM_IDLE_TIMEOUT_MS: u64 = 300_000;
 const DEFAULT_STREAM_MAX_RETRIES: u64 = 5;
 const DEFAULT_REQUEST_MAX_RETRIES: u64 = 4;
@@ -29,6 +31,7 @@ const MAX_REQUEST_MAX_RETRIES: u64 = 100;
 /// and *cannot* be auto-detected at runtime, therefore each provider entry
 /// must declare which one it expects.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum WireApi {
     /// The Responses API exposed by OpenAI at `/v1/responses`.
@@ -41,6 +44,7 @@ pub enum WireApi {
 
 /// Serializable representation of a provider definition.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 pub struct ModelProviderInfo {
     /// Friendly display name.
     pub name: String,
@@ -55,6 +59,7 @@ pub struct ModelProviderInfo {
 
     /// Which wire protocol this provider expects.
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub wire_api: WireApi,
 
     /// Optional query parameters to append to the base URL.
@@ -82,6 +87,7 @@ pub struct ModelProviderInfo {
 
     /// Whether this provider requires some form of standard authentication (API key, ChatGPT token).
     #[serde(default)]
+    #[cfg_attr(feature = "json-schema", schemars(default))]
     pub requires_openai_auth: bool,
 }
 
@@ -413,6 +419,8 @@ env_http_headers = { "X-Example-Env-Header" = "EXAMPLE_ENV_VAR" }
             requires_openai_auth: false,
         };
 
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
         let provider: ModelProviderInfo = toml::from_str(azure_provider_toml).unwrap();
         assert_eq!(expected_provider, provider);
     }

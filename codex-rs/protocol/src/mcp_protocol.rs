@@ -17,6 +17,8 @@ use serde::Deserialize;
 use serde::Serialize;
 use strum_macros::Display;
 use ts_rs::TS;
+#[cfg(feature = "json-schema")]
+use schemars::JsonSchema;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS, Hash)]
@@ -64,6 +66,7 @@ impl GitSha {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, TS)]
+#[cfg_attr(feature = "json-schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum AuthMode {
     ApiKey,

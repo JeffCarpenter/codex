@@ -26,6 +26,15 @@ tracing = "0.1.41"
 ts-rs = { version = "11", features = ["uuid-impl", "serde-json-impl", "no-serde-warnings"] }
 uuid = { version = "1", features = ["serde", "v4"] }
 
+[features]
+default = []
+# Enable JSON Schema derivations for protocol enums used by config
+json-schema = ["dep:schemars"]
+
+[dependencies.schemars]
+version = "0.8"
+optional = true
+
 [dev-dependencies]
 pretty_assertions = "1.4.1"
 
