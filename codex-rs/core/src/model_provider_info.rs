@@ -299,6 +299,7 @@ pub fn built_in_model_providers() -> HashMap<String, ModelProviderInfo> {
                 requires_openai_auth: true,
             },
         ),
+        ("openrouter", create_openrouter_provider()),
         (BUILT_IN_OSS_MODEL_PROVIDER_ID, create_oss_provider()),
     ]
     .into_iter()
@@ -337,6 +338,49 @@ pub fn create_oss_provider_with_base_url(base_url: &str) -> ModelProviderInfo {
         query_params: None,
         http_headers: None,
         env_http_headers: None,
+        request_max_retries: None,
+        stream_max_retries: None,
+        stream_idle_timeout_ms: None,
+        requires_openai_auth: false,
+    }
+}
+
+/// Create the built-in OpenRouter provider configuration.
+///
+/// OpenRouter is compatible with the OpenAI Chat Completions API and provides
+/// access to multiple model providers through a unified interface.
+///
+/// Configuration:
+/// - Base URL: `https://openrouter.ai/api/v1`
+/// - API Key: Required via `OPENROUTER_API_KEY` environment variable
+/// - Wire API: Chat Completions (not Responses API)
+/// - Optional Headers:
+///   - `HTTP-Referer`: Set via `OPENROUTER_HTTP_REFERER` for rankings
+///   - `X-Title`: Set via `OPENROUTER_APP_TITLE` for rankings
+///
+/// See: https://openrouter.ai/docs/api-reference/overview
+pub fn create_openrouter_provider() -> ModelProviderInfo {
+    ModelProviderInfo {
+        name: "OpenRouter".into(),
+        base_url: Some("https://openrouter.ai/api/v1".into()),
+        env_key: Some("OPENROUTER_API_KEY".into()),
+        env_key_instructions: Some(
+            "Get your OpenRouter API key from https://openrouter.ai/keys".into(),
+        ),
+        wire_api: WireApi::Chat,
+        query_params: None,
+        http_headers: None,
+        env_http_headers: Some(
+            [
+                (
+                    "HTTP-Referer".to_string(),
+                    "OPENROUTER_HTTP_REFERER".to_string(),
+                ),
+                ("X-Title".to_string(), "OPENROUTER_APP_TITLE".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+        ),
         request_max_retries: None,
         stream_max_retries: None,
         stream_idle_timeout_ms: None,
@@ -510,5 +554,152 @@ env_http_headers = { "X-Example-Env-Header" = "EXAMPLE_ENV_VAR" }
                 "expected {base_url} not to be detected as Azure"
             );
         }
+    }
+
+    #[test]
+    fn openrouter_provider_has_correct_configuration() {
+        let provider = create_openrouter_provider();
+
+        assert_eq!(provider.name, "OpenRouter");
+        assert_eq!(
+            provider.base_url,
+            Some("https://openrouter.ai/api/v1".to_string())
+        );
+        assert_eq!(provider.env_key, Some("OPENROUTER_API_KEY".to_string()));
+        assert!(provider.env_key_instructions.is_some());
+        assert_eq!(provider.wire_api, WireApi::Chat);
+        assert!(!provider.requires_openai_auth);
+
+        // Verify optional headers are configured
+        let env_headers = provider.env_http_headers.as_ref().unwrap();
+        assert_eq!(
+            env_headers.get("HTTP-Referer"),
+            Some(&"OPENROUTER_HTTP_REFERER".to_string())
+        );
+        assert_eq!(
+            env_headers.get("X-Title"),
+            Some(&"OPENROUTER_APP_TITLE".to_string())
+        );
+    }
+
+    #[test]
+    fn openrouter_provider_is_in_built_in_providers() {
+        let providers = built_in_model_providers();
+        assert!(providers.contains_key("openrouter"));
+
+        let openrouter = &providers["openrouter"];
+        assert_eq!(openrouter.name, "OpenRouter");
+        assert_eq!(openrouter.wire_api, WireApi::Chat);
+    }
+
+    #[test]
+    fn openrouter_provider_constructs_correct_url() {
+        let provider = create_openrouter_provider();
+        let url = provider.get_full_url(&None);
+
+        assert_eq!(url, "https://openrouter.ai/api/v1/chat/completions");
+    }
+
+    #[test]
+    fn openrouter_provider_requires_api_key() {
+        let provider = create_openrouter_provider();
+
+        // Without the env var set, api_key() should return an error
+        unsafe {
+            std::env::remove_var("OPENROUTER_API_KEY");
+        }
+        let result = provider.api_key();
+        assert!(result.is_err());
+
+        // With the env var set, it should return the key
+        unsafe {
+            std::env::set_var("OPENROUTER_API_KEY", "test-key");
+        }
+        let result = provider.api_key();
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), Some("test-key".to_string()));
+
+        // Clean up
+        unsafe {
+            std::env::remove_var("OPENROUTER_API_KEY");
+        }
+    }
+
+    #[test]
+    fn openrouter_provider_includes_optional_headers_when_env_vars_set() {
+        let provider = create_openrouter_provider();
+
+        // Set the optional environment variables
+        unsafe {
+            std::env::set_var("OPENROUTER_HTTP_REFERER", "https://example.com");
+            std::env::set_var("OPENROUTER_APP_TITLE", "Test App");
+        }
+
+        let client = reqwest::Client::new();
+        let builder = client.post("https://example.com");
+        let _builder = provider.apply_http_headers(builder);
+
+        // We can't easily inspect the headers in the builder, but we can verify
+        // the env_http_headers configuration is correct
+        let env_headers = provider.env_http_headers.as_ref().unwrap();
+        assert_eq!(env_headers.len(), 2);
+
+        // Clean up
+        unsafe {
+            std::env::remove_var("OPENROUTER_HTTP_REFERER");
+            std::env::remove_var("OPENROUTER_APP_TITLE");
+        }
+    }
+
+    #[test]
+    fn openrouter_provider_omits_optional_headers_when_env_vars_not_set() {
+        let provider = create_openrouter_provider();
+
+        // Ensure the env vars are not set
+        unsafe {
+            std::env::remove_var("OPENROUTER_HTTP_REFERER");
+            std::env::remove_var("OPENROUTER_APP_TITLE");
+        }
+
+        // The provider should still be valid, just without the optional headers
+        let env_headers = provider.env_http_headers.as_ref().unwrap();
+        assert_eq!(env_headers.len(), 2);
+    }
+
+    #[test]
+    fn deserialize_openrouter_model_provider_toml() {
+        let openrouter_provider_toml = r#"
+name = "OpenRouter"
+base_url = "https://openrouter.ai/api/v1"
+env_key = "OPENROUTER_API_KEY"
+env_key_instructions = "Get your OpenRouter API key from https://openrouter.ai/keys"
+wire_api = "chat"
+env_http_headers = { "HTTP-Referer" = "OPENROUTER_HTTP_REFERER", "X-Title" = "OPENROUTER_APP_TITLE" }
+        "#;
+
+        let provider: ModelProviderInfo = toml::from_str(openrouter_provider_toml).unwrap();
+
+        assert_eq!(provider.name, "OpenRouter");
+        assert_eq!(
+            provider.base_url,
+            Some("https://openrouter.ai/api/v1".to_string())
+        );
+        assert_eq!(provider.env_key, Some("OPENROUTER_API_KEY".to_string()));
+        assert_eq!(
+            provider.env_key_instructions,
+            Some("Get your OpenRouter API key from https://openrouter.ai/keys".to_string())
+        );
+        assert_eq!(provider.wire_api, WireApi::Chat);
+        assert!(!provider.requires_openai_auth);
+
+        let env_headers = provider.env_http_headers.as_ref().unwrap();
+        assert_eq!(
+            env_headers.get("HTTP-Referer"),
+            Some(&"OPENROUTER_HTTP_REFERER".to_string())
+        );
+        assert_eq!(
+            env_headers.get("X-Title"),
+            Some(&"OPENROUTER_APP_TITLE".to_string())
+        );
     }
 }

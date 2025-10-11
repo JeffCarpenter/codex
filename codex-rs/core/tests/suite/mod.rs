@@ -15,6 +15,7 @@ mod list_dir;
 mod live_cli;
 mod model_overrides;
 mod model_tools;
+mod openrouter;
 mod otel;
 mod prompt_caching;
 mod read_file;
