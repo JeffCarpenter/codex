@@ -13,6 +13,7 @@ use codex_app_server_protocol::LoginChatGptResponse;
 use codex_app_server_protocol::LogoutChatGptResponse;
 use codex_app_server_protocol::RequestId;
 use codex_login::login_with_api_key;
+use core_test_support::skip_if_no_network;
 use tempfile::TempDir;
 use tokio::time::timeout;
 
@@ -95,6 +96,8 @@ async fn logout_chatgpt_removes_auth() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn login_and_cancel_chatgpt() {
+    skip_if_no_network!();
+
     let codex_home = TempDir::new().unwrap_or_else(|e| panic!("create tempdir: {e}"));
     create_config_toml(codex_home.path()).unwrap_or_else(|err| panic!("write config.toml: {err}"));
 

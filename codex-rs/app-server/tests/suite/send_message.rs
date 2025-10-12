@@ -15,6 +15,7 @@ use codex_app_server_protocol::RequestId;
 use codex_app_server_protocol::SendUserMessageParams;
 use codex_app_server_protocol::SendUserMessageResponse;
 use codex_protocol::ConversationId;
+use core_test_support::skip_if_no_network;
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;
 use tokio::time::timeout;
@@ -23,6 +24,8 @@ const DEFAULT_READ_TIMEOUT: std::time::Duration = std::time::Duration::from_secs
 
 #[tokio::test]
 async fn test_send_message_success() {
+    skip_if_no_network!();
+
     // Spin up a mock completions server that immediately ends the Codex turn.
     // Two Codex turns hit the mock model (session start + send-user-message). Provide two SSE responses.
     let responses = vec![

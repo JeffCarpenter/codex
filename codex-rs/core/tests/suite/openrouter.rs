@@ -13,13 +13,62 @@ use core_test_support::skip_if_no_network;
 use core_test_support::wait_for_event;
 use pretty_assertions::assert_eq;
 use serde_json::json;
+use std::sync::OnceLock;
 use tempfile::TempDir;
+use tokio::sync::Mutex as TokioMutex;
 use wiremock::Mock;
 use wiremock::MockServer;
 use wiremock::ResponseTemplate;
 use wiremock::matchers::header;
 use wiremock::matchers::method;
 use wiremock::matchers::path;
+
+static ENV_MUTEX: OnceLock<TokioMutex<()>> = OnceLock::new();
+
+fn env_mutex() -> &'static TokioMutex<()> {
+    ENV_MUTEX.get_or_init(|| TokioMutex::new(()))
+}
+
+fn set_env_var(key: &str, value: &str) {
+    // Safety: calls are guarded by ENV_MUTEX to prevent concurrent environment mutation.
+    unsafe { std::env::set_var(key, value) };
+}
+
+fn remove_env_var(key: &str) {
+    // Safety: calls are guarded by ENV_MUTEX to prevent concurrent environment mutation.
+    unsafe { std::env::remove_var(key) };
+}
+
+struct EnvGuard {
+    vars: Vec<(&'static str, Option<String>)>,
+}
+
+impl EnvGuard {
+    fn new(settings: &[(&'static str, Option<&str>)]) -> Self {
+        let mut vars = Vec::with_capacity(settings.len());
+        for (key, value) in settings {
+            let previous = std::env::var(key).ok();
+            match value {
+                Some(val) => set_env_var(key, val),
+                None => remove_env_var(key),
+            }
+            vars.push((*key, previous));
+        }
+        Self { vars }
+    }
+}
+
+impl Drop for EnvGuard {
+    fn drop(&mut self) {
+        for (key, previous) in &self.vars {
+            if let Some(previous) = previous {
+                set_env_var(key, previous);
+            } else {
+                remove_env_var(key);
+            }
+        }
+    }
+}
 
 #[test]
 fn openrouter_provider_configuration() {
@@ -69,12 +118,10 @@ fn openrouter_uses_chat_completions_api() {
 
 #[test]
 fn openrouter_requires_api_key_from_env() {
-    let provider = create_openrouter_provider();
+    let _env_lock = env_mutex().blocking_lock();
+    let _env_guard = EnvGuard::new(&[("OPENROUTER_API_KEY", None)]);
 
-    // Clean slate
-    unsafe {
-        std::env::remove_var("OPENROUTER_API_KEY");
-    }
+    let provider = create_openrouter_provider();
 
     // Should error without the key
     let result = provider.api_key();
@@ -84,27 +131,21 @@ fn openrouter_requires_api_key_from_env() {
     );
 
     // Should succeed with the key
-    unsafe {
-        std::env::set_var("OPENROUTER_API_KEY", "sk-or-test-key");
-    }
+    set_env_var("OPENROUTER_API_KEY", "sk-or-test-key");
     let result = provider.api_key();
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), Some("sk-or-test-key".to_string()));
-
-    // Clean up
-    unsafe {
-        std::env::remove_var("OPENROUTER_API_KEY");
-    }
 }
 
 #[test]
 fn openrouter_handles_empty_api_key() {
+    let _env_lock = env_mutex().blocking_lock();
+    let _env_guard = EnvGuard::new(&[("OPENROUTER_API_KEY", None)]);
+
     let provider = create_openrouter_provider();
 
     // Empty string should be treated as missing
-    unsafe {
-        std::env::set_var("OPENROUTER_API_KEY", "");
-    }
+    set_env_var("OPENROUTER_API_KEY", "");
     let result = provider.api_key();
     assert!(
         result.is_err(),
@@ -112,19 +153,12 @@ fn openrouter_handles_empty_api_key() {
     );
 
     // Whitespace-only should also be treated as missing
-    unsafe {
-        std::env::set_var("OPENROUTER_API_KEY", "   ");
-    }
+    set_env_var("OPENROUTER_API_KEY", "   ");
     let result = provider.api_key();
     assert!(
         result.is_err(),
         "Whitespace-only OPENROUTER_API_KEY should be treated as missing"
     );
-
-    // Clean up
-    unsafe {
-        std::env::remove_var("OPENROUTER_API_KEY");
-    }
 }
 
 #[test]
@@ -151,6 +185,9 @@ fn openrouter_optional_headers_configuration() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn openrouter_sends_correct_request_format() {
     skip_if_no_network!();
+
+    let _env_lock = env_mutex().lock().await;
+    let _env_guard = EnvGuard::new(&[("OPENROUTER_API_KEY", Some("test-openrouter-key"))]);
 
     let server = MockServer::start().await;
 
@@ -196,11 +233,6 @@ async fn openrouter_sends_correct_request_format() {
     config.model = "gpt-4".to_string();
     config.model_provider = provider;
 
-    // Set the API key
-    unsafe {
-        std::env::set_var("OPENROUTER_API_KEY", "test-openrouter-key");
-    }
-
     let conversation_manager =
         ConversationManager::with_auth(CodexAuth::from_api_key("test-openrouter-key"));
     let codex = conversation_manager
@@ -222,16 +254,18 @@ async fn openrouter_sends_correct_request_format() {
 
     // Verify the mock was called
     drop(mock);
-
-    // Clean up
-    unsafe {
-        std::env::remove_var("OPENROUTER_API_KEY");
-    }
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn openrouter_includes_optional_headers_when_set() {
     skip_if_no_network!();
+
+    let _env_lock = env_mutex().lock().await;
+    let _env_guard = EnvGuard::new(&[
+        ("OPENROUTER_HTTP_REFERER", Some("https://myapp.example.com")),
+        ("OPENROUTER_APP_TITLE", Some("My Codex App")),
+        ("OPENROUTER_API_KEY", Some("test-key")),
+    ]);
 
     let server = MockServer::start().await;
 
@@ -263,13 +297,6 @@ async fn openrouter_includes_optional_headers_when_set() {
         .mount_as_scoped(&server)
         .await;
 
-    // Set optional headers
-    unsafe {
-        std::env::set_var("OPENROUTER_HTTP_REFERER", "https://myapp.example.com");
-        std::env::set_var("OPENROUTER_APP_TITLE", "My Codex App");
-        std::env::set_var("OPENROUTER_API_KEY", "test-key");
-    }
-
     let mut provider = create_openrouter_provider();
     provider.base_url = Some(format!("{}/v1", server.uri()));
 
@@ -297,18 +324,18 @@ async fn openrouter_includes_optional_headers_when_set() {
     wait_for_event(&codex, |ev| matches!(ev, EventMsg::TaskComplete(_))).await;
 
     drop(mock);
-
-    // Clean up
-    unsafe {
-        std::env::remove_var("OPENROUTER_HTTP_REFERER");
-        std::env::remove_var("OPENROUTER_APP_TITLE");
-        std::env::remove_var("OPENROUTER_API_KEY");
-    }
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn openrouter_works_without_optional_headers() {
     skip_if_no_network!();
+
+    let _env_lock = env_mutex().lock().await;
+    let _env_guard = EnvGuard::new(&[
+        ("OPENROUTER_HTTP_REFERER", None),
+        ("OPENROUTER_APP_TITLE", None),
+        ("OPENROUTER_API_KEY", Some("test-key")),
+    ]);
 
     let server = MockServer::start().await;
 
@@ -339,13 +366,6 @@ async fn openrouter_works_without_optional_headers() {
         .mount_as_scoped(&server)
         .await;
 
-    // Ensure optional headers are NOT set
-    unsafe {
-        std::env::remove_var("OPENROUTER_HTTP_REFERER");
-        std::env::remove_var("OPENROUTER_APP_TITLE");
-        std::env::set_var("OPENROUTER_API_KEY", "test-key");
-    }
-
     let mut provider = create_openrouter_provider();
     provider.base_url = Some(format!("{}/v1", server.uri()));
 
@@ -373,11 +393,6 @@ async fn openrouter_works_without_optional_headers() {
     wait_for_event(&codex, |ev| matches!(ev, EventMsg::TaskComplete(_))).await;
 
     drop(mock);
-
-    // Clean up
-    unsafe {
-        std::env::remove_var("OPENROUTER_API_KEY");
-    }
 }
 
 #[test]
