@@ -141,6 +141,31 @@ mod tests {
         }};
     }
 
+    #[cfg(unix)]
+    macro_rules! skip_if_pty_unavailable {
+        ($return_value:expr $(,)?) => {{
+            match portable_pty::native_pty_system().openpty(portable_pty::PtySize {
+                rows: 24,
+                cols: 80,
+                pixel_width: 0,
+                pixel_height: 0,
+            }) {
+                Ok(_) => {}
+                Err(err) => {
+                    let permission_denied =
+                        err.downcast_ref::<std::io::Error>().is_some_and(|io_err| {
+                            io_err.kind() == std::io::ErrorKind::PermissionDenied
+                        });
+                    if permission_denied {
+                        eprintln!("Skipping test because PTY creation is not permitted: {err}");
+                        return $return_value;
+                    }
+                    panic!("openpty failed: {err}");
+                }
+            }
+        }};
+    }
+
     #[test]
     fn push_chunk_trims_only_excess_bytes() {
         let mut buffer = OutputBufferState::default();
