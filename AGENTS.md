@@ -14,6 +14,10 @@ In the codex-rs folder where the rust code lives:
 - Do not use unsigned integer even if the number cannot be negative.
 - When writing tests, prefer comparing the equality of entire objects over fields one by one.
 - When making a change that adds or changes an API, ensure that the documentation in the `docs/` folder is up to date if applicable.
+- To capture release-mode test metadata for `codex-core` without running tests, use `cargo test -p codex-core --lib --release --color=never --message-format=json-diagnostic-short --no-run -j12 > cargo-test.json` and extract the relevant artifacts via:
+  ```bash
+  cat cargo-test.json | jq 'select(.reason == "compiler-artifact" and ((.package_id? // "") | startswith("path+file:///home/jeff/code/vendor/codex/codex-rs/core#"))) | {reason, target: .target.name, filenames}'
+  ```
 
 Run `just fmt` (in `codex-rs` directory) automatically after making Rust code changes; do not ask for approval to run it. Before finalizing a change to `codex-rs`, run `just fix -p <project>` (in `codex-rs` directory) to fix any linter issues in the code. Prefer scoping with `-p` to avoid slow workspace‑wide Clippy builds; only run `just fix` without `-p` if you changed shared crates. Additionally, run the tests:
 
