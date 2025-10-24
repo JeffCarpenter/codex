@@ -342,6 +342,64 @@ macro_rules! skip_if_sandbox {
 }
 
 #[macro_export]
+#[cfg(unix)]
+macro_rules! skip_if_pty_unavailable {
+    () => {{
+        match ::portable_pty::native_pty_system().openpty(::portable_pty::PtySize {
+            rows: 24,
+            cols: 80,
+            pixel_width: 0,
+            pixel_height: 0,
+        }) {
+            Ok(_) => {}
+            Err(err) => {
+                let permission_denied = err
+                    .downcast_ref::<::std::io::Error>()
+                    .is_some_and(|io_err| io_err.kind() == ::std::io::ErrorKind::PermissionDenied);
+                if permission_denied {
+                    eprintln!("Skipping test because PTY creation is not permitted: {err}");
+                    return;
+                }
+                panic!("openpty failed: {err}");
+            }
+        }
+    }};
+    ($return_value:expr $(,)?) => {{
+        match ::portable_pty::native_pty_system().openpty(::portable_pty::PtySize {
+            rows: 24,
+            cols: 80,
+            pixel_width: 0,
+            pixel_height: 0,
+        }) {
+            Ok(_) => {}
+            Err(err) => {
+                let permission_denied = err
+                    .downcast_ref::<::std::io::Error>()
+                    .is_some_and(|io_err| io_err.kind() == ::std::io::ErrorKind::PermissionDenied);
+                if permission_denied {
+                    eprintln!("Skipping test because PTY creation is not permitted: {err}");
+                    return $return_value;
+                }
+                panic!("openpty failed: {err}");
+            }
+        }
+    }};
+}
+
+#[macro_export]
+#[cfg(not(unix))]
+macro_rules! skip_if_pty_unavailable {
+    () => {{
+        eprintln!("Skipping test because PTY support is unavailable on this platform.");
+        return;
+    }};
+    ($return_value:expr $(,)?) => {{
+        eprintln!("Skipping test because PTY support is unavailable on this platform.");
+        return $return_value;
+    }};
+}
+
+#[macro_export]
 macro_rules! skip_if_no_network {
     () => {{
         if ::std::env::var($crate::sandbox_network_env_var()).is_ok() {

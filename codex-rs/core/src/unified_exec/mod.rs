@@ -75,6 +75,7 @@ mod tests {
     use crate::codex::make_session_and_context;
     use crate::protocol::AskForApproval;
     use crate::protocol::SandboxPolicy;
+    use core_test_support::skip_if_pty_unavailable;
     use core_test_support::skip_if_sandbox;
     use std::sync::Arc;
     use tokio::time::Duration;
@@ -114,56 +115,6 @@ mod tests {
                 },
             )
             .await
-    }
-
-    #[cfg(unix)]
-    macro_rules! skip_if_pty_unavailable {
-        ($return_value:expr $(,)?) => {{
-            match portable_pty::native_pty_system().openpty(portable_pty::PtySize {
-                rows: 24,
-                cols: 80,
-                pixel_width: 0,
-                pixel_height: 0,
-            }) {
-                Ok(_) => {}
-                Err(err) => {
-                    let permission_denied =
-                        err.downcast_ref::<std::io::Error>().is_some_and(|io_err| {
-                            io_err.kind() == std::io::ErrorKind::PermissionDenied
-                        });
-                    if permission_denied {
-                        eprintln!("Skipping test because PTY creation is not permitted: {err}");
-                        return $return_value;
-                    }
-                    panic!("openpty failed: {err}");
-                }
-            }
-        }};
-    }
-
-    #[cfg(unix)]
-    macro_rules! skip_if_pty_unavailable {
-        ($return_value:expr $(,)?) => {{
-            match portable_pty::native_pty_system().openpty(portable_pty::PtySize {
-                rows: 24,
-                cols: 80,
-                pixel_width: 0,
-                pixel_height: 0,
-            }) {
-                Ok(_) => {}
-                Err(err) => {
-                    let permission_denied =
-                        err.downcast_ref::<std::io::Error>().is_some_and(|io_err| {
-                            io_err.kind() == std::io::ErrorKind::PermissionDenied
-                        });
-                    if permission_denied {
-                        eprintln!("Skipping test because PTY creation is not permitted: {err}");
-                        return $return_value;
-                    }
-                    panic!("openpty failed: {err}");
-                }
-            }
-        }};
     }
 
     #[test]

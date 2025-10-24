@@ -16,3 +16,4 @@
 - Long-lived JSON schema changes (`protocol/`, `app-server/`) should be coordinated with upstream to prevent schema drift.
 ** History
 - 2025-10-24: Document created; branch `jeff` rebased onto `main` (commit 420fb020) to align with local upstream mirror.
+- 2025-10-24: Extracted PTY skip macro into `core_test_support` and added shared guard to minimize churn in `core/src/unified_exec/mod.rs`.
