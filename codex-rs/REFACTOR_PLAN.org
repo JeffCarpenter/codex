@@ -1,0 +1,18 @@
+* Refactor Plan: Local Branch Hygiene
+** Branch layout
+- `main` tracks upstream `origin/main`; `jeff` carries our local patches corresponding to upstream PRs that have not landed locally yet.
+- Always fetch `origin` and `upstream` before rebasing so that `main` reflects the latest upstream state prior to replaying our commits.
+** Keeping changes isolated
+- Prefer landing experimental work in dedicated modules or feature-flagged code paths so upstream churn in shared modules does not trigger conflicts.
+- When patching shared helpers (e.g., `codex-rs/core`, `codex-rs/tui`), gate behavior with capability checks or `Features` toggles instead of altering defaults.
+- For workflow or docs tweaks, keep edits scoped to files owned by the same upstream teams, avoiding cross-cutting renames that upstream may refactor.
+** Rebase playbook
+- `git switch main && git pull --ff-only origin main` to sync the local base.
+- `git switch jeff && git rebase main` to replay our stack on top of the refreshed base.
+- Resolve conflicts commit-by-commit; prefer `git rerere` to speed up recurrent merges.
+- After a successful rebase, run `just fmt` and the relevant `cargo test -p <crate>` commands before pushing.
+** Hot spots to watch
+- `codex-rs/core` and `codex-rs/tui` receive heavy upstream development; monitor their changelogs before editing shared structs or enums.
+- Long-lived JSON schema changes (`protocol/`, `app-server/`) should be coordinated with upstream to prevent schema drift.
+** History
+- 2025-10-24: Document created; branch `jeff` rebased onto `main` (commit 420fb020) to align with local upstream mirror.
